@@ -1,0 +1,6 @@
+.vscode
+*.db
+go.mod
+go.sum
+main
+config.json
