@@ -36,6 +36,7 @@ func monitorNotionTavern() {
 	notionBountyDb, err := notionClient.Database.Query(context.Background(), notionapi.DatabaseID(conf.TavernSync_NotionDb_id), &notionapi.DatabaseQueryRequest{})
 	if err != nil {
 		log.Println("err", err)
+		return
 	}
 	// 获取本地数据库已经同步的列表
 	idList := selectBountyList()
@@ -186,6 +187,7 @@ func monitorNotionTavern() {
 		forumMessage, err := discordSession.ForumThreadStart(conf.TavernSync_DcChannel_id, bounty.Name, 10080, "### 任务说明：\n"+bountyDescription+"\n"+"@everyone")
 		if err != nil {
 			log.Println("DC插入失败：", err)
+			return
 		}
 		// 发送联络信息
 		discordSession.ChannelMessageSendEmbeds(forumMessage.ID, embedContent)
