@@ -1,5 +1,5 @@
 # <p align="center"> SeeDcBot </p>
-<p align="center"> 将SeeDAO生态连接至Discord社区 </p>
+<p align="center"> 将DC连接SeeDAO生态 </p>
 
 ## 支持功能
 * Notion 悬赏酒馆同步至Dc论坛
