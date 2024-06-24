@@ -3,6 +3,7 @@
 
 ## 支持功能
 * Notion 悬赏酒馆同步至Dc论坛
+* Discord 活动同步到 Google 日历
 
 ## 安装部署
 1. 下载依赖包：
@@ -48,4 +49,8 @@
 3. Sqlite 调用
     ```
     sql.Open("sqlite3", "./....db")
+    ```
+4. Google 调用
+    ```
+    googleClient.
     ```

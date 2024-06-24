@@ -6,6 +6,8 @@ import (
 )
 
 type Conf struct {
+	Calendar_id             string
+	Guild_id                string
 	Discord_bot_auth        string
 	Notion_auth             string
 	TavernSync_NotionDb_id  string
@@ -41,10 +43,13 @@ func main() {
 	dcInit()
 	// notion 初始化
 	notionInit()
+	// 谷歌初始化
+	googleInit()
 
 	// 酒馆同步初始化
 	go tavernSyncInit()
-
+	// google日历同步初始化
+	go calendarsync()
 	<-make(chan struct{})
 
 }
