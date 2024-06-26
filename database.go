@@ -42,7 +42,7 @@ func dbInit() {
 	}
 
 	if err := tavernDb.Ping(); err != nil {
-		log.Fatalf("open database fail")
+		log.Fatalf("tavernDb open database fail")
 		return
 	}
 
@@ -60,14 +60,15 @@ func dbInit() {
 						scheduledstarttime TIME,
 						scheduledendtime TIME,
 						location TEXT,
-						geventid TEXT
+						geventid TEXT,
+						rm  BOOLEAN DEFAULT false
 						)`)
 	if err != nil {
 		log.Println(err)
 	}
 
-	if err := tavernDb.Ping(); err != nil {
-		log.Fatalf("open database fail")
+	if err := calendarDb.Ping(); err != nil {
+		log.Fatalf("calendarDb open database fail")
 		return
 	}
 
@@ -147,8 +148,8 @@ func selectCalendarList() []Event {
 	db, _ := sql.Open("sqlite3", "./calendar_data.db")
 
 	// 从日历表中查询数据并打印
-	timeNow := time.Now().Format("2006-01-02 15:04:05")
-	sql := "SELECT id, name, scheduledstarttime, geventid FROM calendarlist where scheduledstarttime > ?"
+	timeNow := time.Now().UTC().Format("2006-01-02 15:04:05")
+	sql := "SELECT id, name, scheduledstarttime, geventid FROM calendarlist where scheduledstarttime > ? AND rm == false"
 	log.Println(db.Ping())
 
 	rows, err := db.Query(sql, timeNow)
@@ -172,4 +173,17 @@ func selectCalendarList() []Event {
 	}
 
 	return events
+}
+
+func updateCalendarRmMark(geventid string) {
+	db, _ := sql.Open("sqlite3", "./calendar_data.db")
+
+	// 修改已删除日历为false
+	sql := "update calendarlist set rm = true where geventid = ?"
+	_, err := db.Exec(sql, geventid)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("calendar updated successfully.")
 }

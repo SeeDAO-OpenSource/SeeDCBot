@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,12 +9,33 @@ import (
 	"google.golang.org/api/option"
 )
 
+// 返回第二个 Event 数组中与第一个数组ID不同的元素
+func difference(a, b []Event) []Event {
+	m := make(map[string]bool)
+	result := []Event{}
+
+	// 将数组 b 中的元素添加到映射 m 中
+	for _, element := range b {
+		m[element.ID] = true
+	}
+
+	// 遍历数组 a，将不在映射 m 中的元素添加到结果数组中
+	for _, element := range a {
+		if _, ok := m[element.ID]; !ok {
+			result = append(result, element)
+		}
+	}
+
+	return result
+}
+
 func monitorDcEvents() {
-	fmt.Println(conf.Guild_id)
 	guildID := conf.Guild_id
 
 	// 获取已同步列表
 	calendarDbList := selectCalendarList()
+
+	calendarDcDiffList := []Event{}
 
 	// 特殊DC活动排除 [社区大会 翻译公会周会 研发公会周会 S7市政厅通气会]
 	specialEventsID := []string{"1242826196899729519", "1237972510612520991", "1248649014858092634", "1254452696967020677"}
@@ -26,7 +46,13 @@ func monitorDcEvents() {
 		log.Println("获取服务器活动失败:", err)
 		return
 	}
+
+	// 遍历活动
 	for _, event := range events {
+		calendarDcDiff := Event{
+			ID: event.ID,
+		}
+
 		calendarDcData := calendarEvent{
 			Id:                 event.ID,
 			Name:               event.Name,
@@ -37,6 +63,10 @@ func monitorDcEvents() {
 			Location:           event.EntityMetadata.Location,
 			GeventId:           "",
 		}
+
+		// 添加到对比列表
+		calendarDcDiffList = append(calendarDcDiffList, calendarDcDiff)
+
 		// 同步判断键
 		shouldPush := true
 
@@ -62,12 +92,25 @@ func monitorDcEvents() {
 		if shouldPush {
 			googleEventPush(calendarDcData)
 		}
-
-		// err = srv.Events.Delete(calendarID, event.Id).Do()
-		// if err != nil {
-		// 	log.Println("删除日历失败：%v", err)
-		// }
 	}
+
+	// 对比数据库中的活动与DC活动的差别，进行删除
+	diff := difference(calendarDbList, calendarDcDiffList)
+	for _, eventDiff := range diff {
+		srv, err := calendar.NewService(context.Background(), option.WithHTTPClient(googleClient))
+		if err != nil {
+			log.Println("创建Calendar服务失败：%v", err)
+		}
+		calendarID := conf.Calendar_id
+		err = srv.Events.Delete(calendarID, eventDiff.GEventID).Do()
+		if err != nil {
+			log.Println("删除日历失败：%v", err)
+			return
+		}
+		log.Println("日历删除成功", eventDiff.Name, eventDiff.ID, eventDiff.GEventID)
+		updateCalendarRmMark(eventDiff.GEventID)
+	}
+
 }
 
 func googleEventPush(calendarData calendarEvent) {
@@ -94,8 +137,6 @@ func googleEventPush(calendarData calendarEvent) {
 		log.Println("创建Calendar服务失败：%v", err)
 	}
 
-	fmt.Println(event.Summary, event.Start, event.End)
-
 	// 添加到google日历
 	// calendarID := "primary" // 默认 primary
 	calendarID := conf.Calendar_id
@@ -117,7 +158,7 @@ func calendarsync() {
 	log.Println("日历同步初始化成功")
 
 	// 定时器执行
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(6 * time.Minute)
 	defer ticker.Stop()
 	for {
 		select {

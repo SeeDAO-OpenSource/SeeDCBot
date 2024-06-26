@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/bwmarrin/discordgo"
@@ -19,6 +18,6 @@ func dcInit() {
 		log.Fatalf("Cannot open the session: %v", err)
 	}
 
-	fmt.Print("Dc 初始化成功")
+	log.Println("Dc 初始化成功")
 
 }
