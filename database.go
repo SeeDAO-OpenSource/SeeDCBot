@@ -148,7 +148,7 @@ func selectCalendarList() []Event {
 	db, _ := sql.Open("sqlite3", "./calendar_data.db")
 
 	// 从日历表中查询数据并打印
-	timeNow := time.Now().UTC().Format("2006-01-02 15:04:05")
+	timeNow := time.Now().UTC().AddDate(0, 0, -1).Format("2006-01-02 15:04:05")
 	sql := "SELECT id, name, scheduledstarttime, geventid FROM calendarlist where scheduledstarttime > ? AND rm == false"
 	log.Println(db.Ping())
 
